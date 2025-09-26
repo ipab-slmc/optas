@@ -852,18 +852,23 @@ class RobotModel(Model):
                 continue
 
             joint_index = self.get_actuated_joint_index(joint.name)
-            qi = q[joint_index]
-
+            
             T = T @ rt2tr(rpy2r(rpy), xyz)
 
             if joint.type in {"revolute", "continuous"}:
+                qi = q[joint_index]
                 T = T @ r2t(angvec2r(qi, self.get_joint_axis(joint)))
 
             elif joint.type == "prismatic":
+                qi = q[joint_index]
                 T = T @ rt2tr(I3(), qi * self.get_joint_axis(joint))
+
+            elif joint.type == "floating":
+                pass
 
             else:
                 raise JointTypeNotSupported(joint.type)
+                #TODO: Implement this with additional parameter b = (pos, quat)
 
         return T
 
@@ -1252,16 +1257,25 @@ class RobotModel(Model):
                     jcol = cs.vertcat(z, cs.DM.zeros(3))
                     jacobian_columns.append(jcol)
 
+                elif joint.type == "floating":
+                    jcol = cs.DM.zeros(6)
+                    jacobian_columns.append(jcol)
+
                 else:
                     raise JointTypeNotSupported(joint.type)
+                    # TODO: Implement this for floating base
+                    
             else:
                 # if joint not in chain add zeros
                 jcol = cs.DM.zeros(6)
                 jacobian_columns.append(jcol)
-
+        
 
         # Sort columns of jacobian
         jacobian_columns_ordered = [jacobian_columns[idx] for idx in joint_index_order]
+
+        if len(jacobian_columns_ordered)==0:
+            jacobian_columns_ordered = [cs.DM.eye(6)]
 
         # Build jacoian array
         J = jacobian_columns_ordered.pop(0)

@@ -351,7 +351,15 @@ class RobotModel(Model):
 
         @return List of actuated joint names.
         """
-        return [jnt.name for jnt in self.urdf.joints if jnt.type != "fixed"]
+        return [jnt.name for jnt in self.urdf.joints if jnt.type!="fixed"]
+    
+    @property
+    def actuated_joint_dof(self) -> List[int]:
+        """! Property that gives the names of the actuated joints.
+
+        @return map of actuated joint names.
+        """
+        return [6 if jnt.type=='floating' else 1 for jnt in self.urdf.joints if jnt.type!="fixed"]
 
     @property
     def parameter_joint_names(self) -> List[str]:
@@ -417,7 +425,10 @@ class RobotModel(Model):
 
         @return The number of degrees of freedom for the robot.
         """
-        return len(self.actuated_joint_names)
+        joints = [jnt for jnt in self.urdf.joints if jnt.name in self.actuated_joint_names]
+        jdof = [6 if j.type=='floating' else 1 for j in joints]
+        # return len(self.actuated_joint_names)
+        return sum(jdof)
 
     @property
     def num_opt_joints(self) -> int:
@@ -665,6 +676,15 @@ class RobotModel(Model):
         @return Index for the joint.
         """
         return self.actuated_joint_names.index(joint_name)
+    
+    def get_joint_index(self, joint_name: str) -> int:
+        """! Get the joint index for a given joint name.
+
+        @param The name of the joint.
+        @return Index for the joint.
+        """
+        index = self.actuated_joint_names.index(joint_name)
+        return sum(self.actuated_joint_dof[:index])
 
     def get_random_joint_positions(
         self,
@@ -735,17 +755,25 @@ class RobotModel(Model):
         base_link: Union[None, str] = None,
         axis: Union[None, cs.DM] = None,
         numpy_output=False,
+        n_extras: int=0,
     ):
         """! Automate function generation. This is an internal function for the RobotModel class and <b>SHOULD NOT</b> be used."""
         q = cs.SX.sym("q", self.ndof)
+        inp = [q]
         args = [link, q]
+        kwargs = {}
+        if n_extras > 0:
+            e = cs.SX.sym("e", n_extras)
+            # args += [e]
+            kwargs['offset'] = e
+            inp  += [e]
         if axis is not None:
             args.append(axis)
-        kwargs = {}
+        
         if base_link is not None:
             kwargs["base_link"] = base_link
         out = method(*args, **kwargs)
-        F = cs.Function(label, [q], [out])
+        F = cs.Function(label, inp, [out])
 
         class ListFunction:
             def __init__(self, F, n):
@@ -825,7 +853,7 @@ class RobotModel(Model):
 
     @arrayify_args
     @listify_output
-    def get_global_link_transform(self, link: str, q: ArrayType) -> CasADiArrayType:
+    def get_global_link_transform(self, link: str, q: ArrayType, offset: ArrayType=[0,0,0,0,0,0]) -> CasADiArrayType:
         """! Get the link transform in the global frame for a given joint state q.
 
         @param link Name of the end-effector link.
@@ -839,8 +867,8 @@ class RobotModel(Model):
         ), f"given link '{link}' does not appear in URDF"
         root = self.urdf.get_root()
         T = I4()
-        if link == root:
-            return T
+        # if link == root:
+        #     return T
 
         # Iterate over joints in chain
         for joint_name in self.urdf.get_chain(root, link, links=False):
@@ -852,23 +880,29 @@ class RobotModel(Model):
                 continue
 
             joint_index = self.get_actuated_joint_index(joint.name)
+            j_dof = self.actuated_joint_dof[joint_index]
+            j_ind = self.get_joint_index(joint.name)
             
             T = T @ rt2tr(rpy2r(rpy), xyz)
 
             if joint.type in {"revolute", "continuous"}:
-                qi = q[joint_index]
+                qi = q[j_ind]
                 T = T @ r2t(angvec2r(qi, self.get_joint_axis(joint)))
 
             elif joint.type == "prismatic":
-                qi = q[joint_index]
+                qi = q[j_ind]
                 T = T @ rt2tr(I3(), qi * self.get_joint_axis(joint))
 
             elif joint.type == "floating":
-                pass
+                qi = q[j_ind:j_ind+j_dof]
+                T = T @ rt2tr(rotvec2r(qi[3:]), qi[:3])
 
             else:
                 raise JointTypeNotSupported(joint.type)
                 #TODO: Implement this with additional parameter b = (pos, quat)
+
+        # if offset is not None:
+        T = T @ rt2tr(rotvec2r(offset[3:]), offset[:3])
 
         return T
 
@@ -883,13 +917,14 @@ class RobotModel(Model):
         @return A CasADi function that computes the transform for a given joint state. If n > 1 then a list of transform are given for each corresponding joint state.
         """
         return self.make_function(
-            "T", link, self.get_global_link_transform, n=n, numpy_output=numpy_output
+            "T", link, self.get_global_link_transform, n=n, numpy_output=numpy_output, n_extras=6
         )
 
     @arrayify_args
     @listify_output
     def get_link_transform(
-        self, link: str, q: ArrayType, base_link: str
+        self, link: str, q: ArrayType, base_link: str,
+        offset: ArrayType=[0,0,0,0,0,0]
     ) -> CasADiArrayType:
         """! Get the link transform in a given base frame.
 
@@ -898,7 +933,7 @@ class RobotModel(Model):
         @param base_link Name of the base frame link.
         @return Homogeneous transform array.
         """
-        T_L_W = self.get_global_link_transform(link, q)
+        T_L_W = self.get_global_link_transform(link, q, offset)
         T_B_W = self.get_global_link_transform(base_link, q)
         return invt(T_B_W) @ T_L_W
 
@@ -924,6 +959,7 @@ class RobotModel(Model):
             base_link=base_link,
             n=n,
             numpy_output=numpy_output,
+            n_extras=6,
         )
 
     @arrayify_args
@@ -1258,17 +1294,24 @@ class RobotModel(Model):
                     jacobian_columns.append(jcol)
 
                 elif joint.type == "floating":
-                    jcol = cs.DM.zeros(6)
+                    jcol = cs.DM.eye(6)
                     jacobian_columns.append(jcol)
 
                 else:
                     raise JointTypeNotSupported(joint.type)
-                    # TODO: Implement this for floating base
                     
             else:
-                # if joint not in chain add zeros
-                jcol = cs.DM.zeros(6)
-                jacobian_columns.append(jcol)
+                if joint.type in {"revolute", "continuous"}:
+                    # if joint not in chain add zeros
+                    jcol = cs.DM.zeros(6)
+                    jacobian_columns.append(jcol)
+
+                elif joint.type == "floating":
+                    jcol = cs.DM.zeros(6, 6)
+                    jacobian_columns.append(jcol)
+
+                else:
+                    raise JointTypeNotSupported(joint.type)
         
 
         # Sort columns of jacobian
@@ -1528,6 +1571,7 @@ class RobotModel(Model):
         """
         J = self.get_link_geometric_jacobian(link, q, base_link)
         return J[:3, :]
+        
 
     @deprecation_warning("get_link_linear_jacobian_function")
     def get_linear_jacobian_function(self, link, base_link, n=1):
@@ -1998,3 +2042,18 @@ class RobotModel(Model):
         tau_ = cs.vertcat(*[taus[k] for k in range(len(taus) - 1, -1, -1)])
 
         return tau_
+
+    # TODO: Finish implementing this and remove the offset argument.
+    def get_offset_jacobian(self, 
+                            R: CasADiArrayType, 
+                            offset: CasADiArrayType) -> CasADiArrayType:
+        """! Get the linear part of the geometric jacobian in a given base frame.
+
+        @param T transform.
+        @param offset pose.
+        @return matrix to multiply with Jacobian.
+        """
+        I = type(R).eye(3)
+        J = cs.vertcat(cs.horzcat(I, -cs.skew(R @ offset)),
+                       cs.horzcat(0*I, I))
+        return J

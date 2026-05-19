@@ -6,7 +6,6 @@ from .builder import OptimizationBuilder
 from .solver import CasADiSolver, OSQPSolver, CVXOPTSolver, ScipyMinimizeSolver
 from .visualize import Visualizer
 
-
 @arrayify_args
 def deg2rad(x: ArrayType) -> Union[cs.DM, cs.SX]:
     """! Convert degrees to radians.

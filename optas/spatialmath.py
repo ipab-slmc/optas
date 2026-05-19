@@ -4,6 +4,7 @@ import functools
 import casadi as cs
 from casadi import sin, cos, vec
 from typing import List, Dict, Tuple, Union, Callable
+from .config import config
 
 ## Accepted array types.
 ArrayType = Union[cs.DM, cs.SX, List[float], Tuple[float], cs.np.ndarray, float, int]
@@ -84,6 +85,20 @@ def I4() -> cs.DM:
     @return Identity matrix of order 4.
     """
     return cs.DM.eye(4)
+
+@arrayify_args
+def rotvec2r(rotvec: ArrayType) -> CasADiArrayType:
+    """! Convert angle and vector orientation to a rotation matrix. This method uses Rodrigue's formula.
+
+    @param rotvec (rotation axis * angle in radian)
+    @return Rotation matrix.
+    """
+    theta = cs.norm_2(rotvec) + 1e-15
+    sc1 = cs.sin(theta) / (theta)
+    sc2 = 2 * cs.sin(theta / 2) / (theta)
+    sk = skew(rotvec)
+    R = I3() + sc1 * sk + 0.5 * (sc2**2) * sk @ sk  # Rodrigue's equation
+    return R
 
 
 @arrayify_args
@@ -355,10 +370,18 @@ class Quaternion:
         @param q Quaternion as an array.
         @return An instance of the Quaternion class.
         """
-        x = q[0]
-        y = q[1]
-        z = q[2]
-        w = q[3]
+        
+        if config.quaternion_wlast:
+            x = q[0]
+            y = q[1]
+            z = q[2]
+            w = q[3]
+        else:
+            w = q[0]
+            x = q[1]
+            y = q[2]
+            z = q[3]
+            
         return Quaternion(x, y, z, w)
 
     @staticmethod
@@ -379,7 +402,10 @@ class Quaternion:
 
         @return The quaternion as an array.
         """
-        return self._q
+        if config.quaternion_wlast:
+            return self._q
+        else:
+            return self._q[[3, 0, 1, 2]]
 
     def getrpy(self) -> CasADiArrayType:
         """! Return the quaternion as Roll-Pitch-Yaw angles.
@@ -415,3 +441,106 @@ class Quaternion:
             cs.horzcat(2*x*y+2*w*z, 1-2*x*x-2*z*z, 2*y*z-2*w*x),
             cs.horzcat(2*x*z-2*w*y, 2*y*z+2*w*x, 1-2*x*x-2*y*y),
         )
+
+# TODO: Implement this
+# class Transform:
+#     def __init__(self, qp=(0, 0, 0, 0), qr=(0, 0, 0, 1)):
+#         self.pos_quat = Quaternion(*qp)
+#         self.rot_quat = Quaternion(*qr)
+
+#     @property
+#     def R(self):
+#         return self.rot_quat.getrotm()
+    
+#     @property
+#     def u(self):
+#         return self.pos_quat.getquat()[:3]
+
+#     @property
+#     def M(self):
+#         M = cs.horzcat(self.R, self.u)
+#         M = cs.vertcat(M, type(M)([[0, 0, 0, 1]]))
+#         return M
+    
+#     # @M.setter
+#     # def M(self, m):
+#     #     self.R = array(m[:3, :3])
+#     #     self.u = array(m[:3,  3])
+
+#     def inv(self):
+#         return Transform(qp=-self.qp.getquat(),
+#                          qr=self.qr.inv().getquat())
+    
+#     def __mul__(self, m):
+#         return Transform(self.R @ m.R, self.R @ m.u + self.u)
+    
+#     def __repr__(self):
+#         return str(self.to_poshpr())
+    
+#     def norm(self):
+#         return norm(mrad_to_mmdeg(self.to_posrot()))
+    
+#     def to_poshpr(self):
+#         poshpr = zeros(6)
+#         poshpr[:3] = self.u.reshape(3)
+#         poshpr[3:] = degrees(flip(euler.mat2euler(self.R, 'syxz')))
+#         return poshpr
+    
+#     def to_posrot(self):
+#         posrot = zeros(6)
+#         posrot[:3] = self.u.reshape(3)
+#         axis, angle = axangles.mat2axangle(self.R)
+#         posrot[3:] = axis * angle
+#         return posrot
+    
+#     def to_quat(self):
+#         # NOTE: quaternion order x, y, z, w to fit pybullet
+#         pos = self.u
+#         quat = quaternions.mat2quat(self.R)[[1,2,3,0]]
+#         return pos, quat
+    
+#     def to_urdf(self):
+#         u = self.u
+#         rpy = euler.mat2euler(self.R, 'sxyz')
+#         return u, rpy
+    
+#     def to_tf(self):
+#         from tf import transformations
+#         from geometry_msgs.msg import Vector3, Quaternion
+#         translation = Vector3(*self.u)
+#         rotation = Quaternion(*transformations.quaternion_from_matrix(self.M))
+#         return translation, rotation
+
+#     @staticmethod
+#     def from_poshpr(poshpr):
+#         R = euler.euler2mat(*flip(radians(poshpr[3:])), axes='syxz')
+#         u = poshpr[:3]
+#         return Transform(R, u)
+    
+#     @staticmethod
+#     def from_urdf(urdfpose):
+#         u = urdfpose.position
+#         R   = euler.euler2mat(*urdfpose.rotation, 'sxyz')
+#         return Transform(R, u)
+    
+#     @staticmethod
+#     def from_posrot(posrot):
+#         u = posrot[:3]
+#         angle = norm(posrot[3:])
+#         if angle == 0:
+#             R = eye(3)
+#         else:
+#             R = axangles.axangle2mat(posrot[3:] / angle, angle)
+#         return Transform(R, u)
+    
+#     @staticmethod
+#     def from_rotary(axis, radangle):
+#         # R   = euler.euler2mat(*array(axis) * radangle, 'sxyz')
+#         R = axangles.axangle2mat(axis, radangle)
+#         return Transform(R)
+    
+#     @staticmethod
+#     def from_mat4x4(M):
+#         R = M[:3, :3]
+#         u = M[:3, 3]
+#         return Transform(R, u)

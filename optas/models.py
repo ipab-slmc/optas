@@ -247,9 +247,10 @@ class RobotModel(Model):
         """! Initializer for the robot model class.
 
                 Note, at least one of the parameters urdf_filename, urdf_string, or xacro_filename must be specified.
+        The format of urdf_filename/urdf_string is detected automatically: .urdf files and <robot> strings are parsed as URDF, .xml files and <mujoco> strings are parsed as MuJoCo XML (MJCF).
 
-        @param urdf_filename Filename for a URDF.
-        @param urdf_string URDF as a string.
+        @param urdf_filename Filename for a URDF (.urdf) or MuJoCo XML (.xml) file. The format is detected from the file extension.
+        @param urdf_string Robot model as a string (URDF or MJCF, detected from the root element).
         @param xacro_filename Filename for a xacro file.
         @param name Name of the robot model.
         @param time_derivs Time derivatives required for model, 0 means not time derivative, 1 means first derivative wrt to time is required, etc.
@@ -273,24 +274,37 @@ class RobotModel(Model):
                 xml.writexml(str_io)
                 urdf_string = str_io.getvalue()
 
-        # Load URDF
+        # Load the robot model, automatically detecting whether it is a URDF
+        # (.urdf file / <robot> string) or a MuJoCo XML / MJCF (.xml file /
+        # <mujoco> string). MJCF models are converted to a URDF instance.
 
         ## URDF instance.
         self.urdf = None
 
-        ## Filename for URDF file.
+        ## Filename for the robot model file (.urdf or .xml).
         self.urdf_filename = None
 
-        ## URDF string.
+        ## Robot model string.
         self.urdf_string = None
         if urdf_filename is not None:
             self.urdf_filename = urdf_filename
-            self.urdf = URDF.from_xml_file(urdf_filename)
+            if os.path.splitext(urdf_filename)[1].lower() == ".xml":
+                from .mjcf import mjcf_to_urdf
+
+                self.urdf = mjcf_to_urdf(urdf_filename)
+            else:
+                self.urdf = URDF.from_xml_file(urdf_filename)
         if urdf_string is not None:
-            self.urdf = URDF.from_xml_string(urdf_string)
+            self.urdf_string = urdf_string
+            from .mjcf import is_mjcf_string, mjcf_string_to_urdf
+
+            if is_mjcf_string(urdf_string):
+                self.urdf = mjcf_string_to_urdf(urdf_string)
+            else:
+                self.urdf = URDF.from_xml_string(urdf_string)
         assert (
             self.urdf is not None
-        ), "You need to supply a urdf, either through filename or as a string"
+        ), "You need to supply a robot model, either through filename or as a string"
 
         # Setup joint limits, joint position/velocity limits
 
@@ -1302,6 +1316,11 @@ class RobotModel(Model):
                     
             else:
                 if joint.type in {"revolute", "continuous"}:
+                    # if joint not in chain add zeros
+                    jcol = cs.DM.zeros(6)
+                    jacobian_columns.append(jcol)
+
+                elif joint.type == "prismatic":
                     # if joint not in chain add zeros
                     jcol = cs.DM.zeros(6)
                     jacobian_columns.append(jcol)

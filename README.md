@@ -194,14 +194,11 @@ $ python -m pip install 'optas @ git+https://github.com/cmower/optas.git'
 If you use OpTaS in your work, please consider including the following citation.
 
 ```bibtex
-@inproceedings{mower23optas,
-  author={Mower, Christopher E. and Moura, João and Behabadi, Nazanin Zamani and Vijayakumar, Sethu and Vercauteren, Tom and Bergeles, Christos},
-  booktitle={2023 IEEE International Conference on Robotics and Automation (ICRA)},
+@inproceedings{mower23,
+  author={Mower, Christopher E. and Moura, Jo\~{a}o and Behabadi, Nazanin Zamani and Vijayakumar, Sethu and Vercauteren, Tom and Bergeles, Christos},
+  booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
   title={OpTaS: An Optimization-based Task Specification Library for Trajectory Optimization and Model Predictive Control},
   year={2023},
-  volume={},
-  number={},
-  pages={9118-9124},
   doi={10.1109/ICRA48891.2023.10161272}
 }
 ```

@@ -634,4 +634,12 @@ class MixedIntegerNonlinearCostNonlinearConstrained(NonlinearCostNonlinearConstr
         @param ineq_constraints SXContainer containing the inequality constraints.
         @return Instance of the MixedIntegerNonlinearCostNonlinearConstrained class.
         """
-        super().__init__(decision_variables, parameters, cost_terms, lin_eq_constraints,  lin_ineq_constraints, eq_constraints, ineq_constraints)
+        super().__init__(
+            decision_variables,
+            parameters,
+            cost_terms,
+            lin_eq_constraints,
+            lin_ineq_constraints,
+            eq_constraints,
+            ineq_constraints,
+        )

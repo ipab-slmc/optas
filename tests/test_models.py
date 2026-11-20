@@ -524,7 +524,9 @@ class TestRobotModel:
             qi = q[:, i].flatten()
             T_W = [np.array(fk) for fk in tester_robot_model.fkine_all(qi)]
             T_expc = np.linalg.inv(T_W[idx_base]) @ T_W[idx_eff]
-            assert isclose(self.model.get_link_transform("eff", qi, "link1").toarray(), T_expc)
+            assert isclose(
+                self.model.get_link_transform("eff", qi, "link1").toarray(), T_expc
+            )
             assert isclose(Trs[i].toarray(), T_expc)
             assert isclose(prs[:, i].toarray().flatten(), T_expc[:3, 3])
             assert isclose(Rrs[i].toarray(), T_expc[:3, :3])

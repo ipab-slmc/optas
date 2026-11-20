@@ -175,7 +175,7 @@ def main(gui=True):
         if t > planner.Tmax:
             break
         kuka.cmd(plan(t))
-        pybullet_api.time.sleep(dt*float(gui))
+        pybullet_api.time.sleep(dt * float(gui))
 
     pb.stop()
     pb.close()

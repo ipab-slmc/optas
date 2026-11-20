@@ -7,7 +7,6 @@ from typing import Union, List, Dict
 
 from .spatialmath import ArrayType
 
-
 ## SX type: https://web.casadi.org/docs/#document-symbolic
 SX = cs.casadi.SX
 
@@ -50,9 +49,9 @@ class SXContainer(collections.OrderedDict):
         if label in self:
             raise KeyError(f"'{label}' already exists")
         super().__setitem__(label, cs.SX(value))
-        self.is_discrete[
-            label
-        ] = False  # assume non-discrete, otherwise variable_is_discrete(..) should be called
+        self.is_discrete[label] = (
+            False  # assume non-discrete, otherwise variable_is_discrete(..) should be called
+        )
 
     def variable_is_discrete(self, label: str) -> None:
         """! Specify that a given variable is discrete.

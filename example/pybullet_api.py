@@ -123,6 +123,7 @@ class VisualBox:
             base_orientation,
         )
 
+
 class FixedBaseRobot:
     def __init__(self, urdf_filename, base_position=[0.0] * 3):
         self._id = p.loadURDF(
@@ -158,7 +159,7 @@ class FixedBaseRobot:
             self._id,
             self._actuated_joints,
             p.TORQUE_CONTROL,
-            forces = np.asarray(taus).tolist(),
+            forces=np.asarray(taus).tolist(),
         )
 
     def q(self):
@@ -171,11 +172,13 @@ class R2D2(FixedBaseRobot):
         self.urdf_filename = f
         super().__init__(f, base_position=base_position)
 
+
 class Nextage(FixedBaseRobot):
     def __init__(self, base_position=[0.0, 0.0, 0.85]):
         f = os.path.join(cwd, "robots", "nextage", "nextage.urdf")
         self.urdf_file_name = f
         super().__init__(f, base_position=base_position)
+
 
 class KukaLWR(FixedBaseRobot):
     def __init__(self, base_position=[0.0] * 3):

@@ -424,7 +424,6 @@ class CasADiSolver(Solver):
 
 
 class OSQPSolver(Solver):
-
     """OSQP solver interface."""
 
     def setup(self, use_warm_start, settings={}):
@@ -585,7 +584,6 @@ class CVXOPTSolver(Solver):
 
 
 class ScipyMinimizeSolver(Solver):
-
     """Scipy solver (scipy.optimize.minimize) interface."""
 
     ## Methods that require the Jacobian of the objective

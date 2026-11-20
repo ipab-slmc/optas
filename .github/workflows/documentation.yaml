@@ -1,55 +1,34 @@
-name: Build documentation
+name: Docs
 
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - master
-    # Only run the workflow when the pull request is merged
-    # and not when it is closed without merging
-    # To achieve this we can check the pull_request.merged flag
-    # and ensure it is true
-    # https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
-    # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#pull_request
-    # https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#pull_requestmerged
-    # https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#booleans
-    if: github.event.pull_request.merged == true
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-
   docs:
-
-    runs-on: ubuntu-latest
-
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
-
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
-
-      - run: |
-          sudo apt install doxygen graphviz -y
-
-      - run: |
-          cd doc/
-          python gen_mainpage.py
-          doxygen
-
-      - run: |
-          cd doc/html
-          git init
-          touch .nojekyll
-          git add -A
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -m 'deploy'
-
-      - uses: ad-m/github-push-action@v0.6.0
+          submodules: true
+      - run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+      - run: python3 gen_mainpage.py && doxygen
+        working-directory: doc
+      - uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: gh-pages
-          force: true
-          directory: ./doc/html
+          path: doc/html
+      - id: deploy
+        uses: actions/deploy-pages@v4

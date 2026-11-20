@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/cmower/optas/master/doc/logo.png" width="60" align="right">
+  <img src="https://raw.githubusercontent.com/joaomoura24/optas/master/doc/logo.png" width="60" align="right">
 </p>
 
 # OpTaS
@@ -7,17 +7,15 @@
 > **Note:** This repository is based on the original [cmower/optas](https://github.com/cmower/optas), but has significantly diverged from it.
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Lint](https://github.com/cmower/optas/actions/workflows/black.yaml/badge.svg)](https://github.com/cmower/optas/actions/workflows/black.yaml)
-[![Run tests](https://github.com/cmower/optas/actions/workflows/pytest.yaml/badge.svg)](https://github.com/cmower/optas/actions/workflows/pytest.yaml)
-[![Build documentation](https://github.com/cmower/optas/actions/workflows/documentation.yaml/badge.svg)](https://github.com/cmower/optas/actions/workflows/documentation.yaml)
+[![CI](https://github.com/joaomoura24/optas/actions/workflows/ci.yaml/badge.svg)](https://github.com/joaomoura24/optas/actions/workflows/ci.yaml)
+[![Docs](https://github.com/joaomoura24/optas/actions/workflows/documentation.yaml/badge.svg)](https://github.com/joaomoura24/optas/actions/workflows/documentation.yaml)
 
 
 OpTaS is an OPtimization-based TAsk Specification library for trajectory optimization and model predictive control.
 
-- Code: [https://github.com/cmower/optas](https://github.com/cmower/optas)
-- Documentation: [https://cmower.github.io/optas/](https://cmower.github.io/optas/)
-- PyPI: [https://pypi.org/project/pyoptas/](https://pypi.org/project/pyoptas/)
-- Issues: [https://github.com/cmower/optas/issues](https://github.com/cmower/optas/issues)
+- Code: [https://github.com/joaomoura24/optas](https://github.com/joaomoura24/optas)
+- Documentation: [https://joaomoura24.github.io/optas/](https://joaomoura24.github.io/optas/)
+- Issues: [https://github.com/joaomoura24/optas/issues](https://github.com/joaomoura24/optas/issues)
 - ICRA 2023 paper:
   - (arXiv) [https://arxiv.org/abs/2301.13512](https://arxiv.org/abs/2301.13512)
   - (ieee) [https://ieeexplore.ieee.org/document/10161272](https://ieeexplore.ieee.org/document/10161272)
@@ -29,7 +27,7 @@ In the past, OpTaS supported ROS from an internal module. This functionality, wi
 # Example
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/cmower/optas/master/doc/image/kuka_example.png" width="61.803398875%">
+  <img src="https://raw.githubusercontent.com/joaomoura24/optas/master/doc/image/kuka_example.png" width="61.803398875%">
 </p>
 
 
@@ -145,17 +143,13 @@ Make sure `pip` is up-to-date by running `$ python -m pip install --upgrade pip`
 ## Via pip
 
 ```
-$ pip install pyoptas
+$ python -m pip install 'pyoptas @ git+https://github.com/joaomoura24/optas.git'
 ```
 
-Alternatively, you can also install OpTaS using:
-
-```
-$ python -m pip install 'optas @ git+https://github.com/cmower/optas.git'
-```
+Note that `pip install pyoptas` installs the original upstream package from PyPI, not this version.
 
 ## From source
-1. `$ git clone --recursive git@github.com:cmower/optas.git` (if you do not want to build the documentation then the `--recursive` flag is not necessary)
+1. `$ git clone --recursive https://github.com/joaomoura24/optas.git` (if you do not want to build the documentation then the `--recursive` flag is not necessary)
 2. `$ cd optas`
 4. `$ pip install .`
    - if you want to run the examples use: `$ pip install .[example]`
@@ -208,8 +202,8 @@ The preprint can be found on [arXiv](https://arxiv.org/abs/2301.13512).
 # Contributing
 
 We welcome contributions from the community.
-If you come across any issues or inacuracies in the documentation, please [submit an issue](https://github.com/cmower/optas/issues/new/choose).
-If you would like to contribute any new features, please [fork the repository](https://github.com/cmower/optas/fork), and submit a pull request.
+If you come across any issues or inacuracies in the documentation, please [submit an issue](https://github.com/joaomoura24/optas/issues/new/choose).
+If you would like to contribute any new features, please [fork the repository](https://github.com/joaomoura24/optas/fork), and submit a pull request.
 
 # Acknowledgement
 
@@ -219,5 +213,5 @@ T. Vercauteren is supported by a Medtronic / RAEng Research Chair [RCSRF1819\7\3
 This work has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 101017008, Enhancing Healthcare with Assistive Robotic Mobile Manipulation ([HARMONY](https://harmony-eu.org/)).
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/cmower/optas/master/doc/image/eu.png" width="180" align="left">
+  <img src="https://raw.githubusercontent.com/joaomoura24/optas/master/doc/image/eu.png" width="180" align="left">
 </p>

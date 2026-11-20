@@ -136,18 +136,7 @@ Other examples, including dual-arm planning, Model Predictive Control, Trajector
 
 # Support
 
-The following operating systems and python versions are [officially supported](https://github.com/cmower/optas/blob/master/.github/workflows/pytest.yaml):
-
-* Ubuntu 20.04 and 22.04
-  * Python 3.7, 3.8, 3.9
-* Windows
-  * Python 3.8, 3.9
-* Mac OS
-  * Python 3.9
-
-Note that OpTaS makes use of [dataclasses](https://docs.python.org/3/library/dataclasses.html) that was [introduced in Python 3.7](https://peps.python.org/pep-0557/), and so Python versions from 3.6 and lower are not supported on any operating system.
-Other operating systems or higher Python versions will likely work.
-If you experience problems, please [submit an issue](https://github.com/cmower/optas/issues/new/choose).
+Tested on Ubuntu 24.04 with Python 3.12 (see the [CI workflow](.github/workflows/ci.yaml)).
 
 # Install
 

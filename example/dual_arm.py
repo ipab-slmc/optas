@@ -201,9 +201,9 @@ def main(gui=True):
         kukal.cmd(planl(t))
         kukar.cmd(planr(t))
 
-        pybullet_api.time.sleep(dt*float(gui))
+        pybullet_api.time.sleep(dt * float(gui))
 
-    pybullet_api.time.sleep(10.0*float(gui))
+    pybullet_api.time.sleep(10.0 * float(gui))
 
     pb.stop()
     pb.close()

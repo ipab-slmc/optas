@@ -1,4 +1,4 @@
-"""! @brief This is a partial port to Python/CasADi, with some modifications and additions, of the Spatial Math Toolbox for MATLAB. See the following. https://github.com/petercorke/spatialmath-matlab """
+"""! @brief This is a partial port to Python/CasADi, with some modifications and additions, of the Spatial Math Toolbox for MATLAB. See the following. https://github.com/petercorke/spatialmath-matlab"""
 
 import functools
 import casadi as cs
@@ -403,7 +403,7 @@ class Quaternion:
 
         return cs.vertcat(roll, pitch, yaw)
 
-    def getrotm(self) ->CasADiArrayType:
+    def getrotm(self) -> CasADiArrayType:
         """
         @ return rotation matrix
         R = 1 + 2 * w * skew([x, y, z]) + 2 * skew([x, y, z])**2
@@ -411,7 +411,13 @@ class Quaternion:
         x, y, z, w = self.split()
 
         return cs.vertcat(
-            cs.horzcat(1-2*y*y-2*z*z, 2*x*y-2*w*z, 2*x*z+2*w*y),
-            cs.horzcat(2*x*y+2*w*z, 1-2*x*x-2*z*z, 2*y*z-2*w*x),
-            cs.horzcat(2*x*z-2*w*y, 2*y*z+2*w*x, 1-2*x*x-2*y*y),
+            cs.horzcat(
+                1 - 2 * y * y - 2 * z * z, 2 * x * y - 2 * w * z, 2 * x * z + 2 * w * y
+            ),
+            cs.horzcat(
+                2 * x * y + 2 * w * z, 1 - 2 * x * x - 2 * z * z, 2 * y * z - 2 * w * x
+            ),
+            cs.horzcat(
+                2 * x * z - 2 * w * y, 2 * y * z + 2 * w * x, 1 - 2 * x * x - 2 * y * y
+            ),
         )

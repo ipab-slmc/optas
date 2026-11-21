@@ -27,10 +27,10 @@ Q = optas.np.zeros((robot_model.ndof, n))
 qS = robot_model.get_random_joint_positions().toarray().flatten()
 qG = robot_model.get_random_joint_positions().toarray().flatten()
 for i in range(n):
-    alpha = float(i)/float(n-1)
-    Q[:, i] = (1-alpha)*qS + alpha*qG
+    alpha = float(i) / float(n - 1)
+    Q[:, i] = (1 - alpha) * qS + alpha * qG
 
 vis = Visualizer(camera_position=[3, 3, 3])
 vis.grid_floor()
-vis.robot_traj(robot_model, Q, alpha_spec={'style': 'A'})
+vis.robot_traj(robot_model, Q, alpha_spec={"style": "A"})
 vis.start()

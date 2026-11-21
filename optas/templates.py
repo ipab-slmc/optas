@@ -302,14 +302,14 @@ class ROSPlanner(ROSManager):
 
     def get_duration(self) -> Union[None, float]:
         """Return duration for the motion plan. When None is returned, this means that the duration is not yet set.
-
+        
         @return Duration of the motion plan.
         """
         return self.duration
 
     def plan(self) -> interpolate.interp1d:
         """! Solve the planning problem. Reset the problem, solve the problem, and interpolate the result.
-
+        
         @return The interpolated plan as a function of time.
         """
         self.reset()

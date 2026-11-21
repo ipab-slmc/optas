@@ -34,6 +34,6 @@ vis.robot(
 
 save = True
 if save:
-    vis.save("vis.png")
+    vis.save('vis.png')
 else:
     vis.start()

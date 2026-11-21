@@ -1,5 +1,4 @@
 """! @brief Several Model classes are defined."""
-
 import os
 import warnings
 import functools
@@ -1259,6 +1258,7 @@ class RobotModel(Model):
                 # if joint not in chain add zeros
                 jcol = cs.DM.zeros(6)
                 jacobian_columns.append(jcol)
+
 
         # Sort columns of jacobian
         jacobian_columns_ordered = [jacobian_columns[idx] for idx in joint_index_order]

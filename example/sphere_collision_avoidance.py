@@ -4,7 +4,6 @@ import pathlib
 import optas
 from optas.visualize import Visualizer
 
-
 def main(vis=True):
 
     # Setup robot model
@@ -43,6 +42,7 @@ def main(vis=True):
 
         return solution[f"{name}/q"]
 
+
     obs = optas.DM.zeros(3, 6)
     obs[0, :] = 0.55
     obs[1, :] = 0.0
@@ -54,7 +54,7 @@ def main(vis=True):
 
     q0 = compute_initial_configuration()
 
-    duration = 10.0
+    duration = 10.
 
     T = 20
     builder = optas.OptimizationBuilder(T, robots=robot_model, derivs_align=True)
@@ -84,23 +84,17 @@ def main(vis=True):
         "min_vel", optas.sumsqr(builder.get_model_states(name, time_deriv=1))
     )
     builder.add_cost_term(
-        "min_acc", 100 * optas.sumsqr(builder.get_model_states(name, time_deriv=2))
+        "min_acc", 100*optas.sumsqr(builder.get_model_states(name, time_deriv=2))
     )
 
     builder.add_cost_term("nominal", 1e2 * optas.sumsqr(qf - qnom))
 
     obstacle_names = [f"obs{i}" for i in range(6)]
 
-    link_names = [
-        "end_effector_ball",
-        "lwr_arm_7_link",
-        "lwr_arm_5_link",
-        "lwr_arm_6_link",
-    ]
 
-    builder.sphere_collision_avoidance_constraints(
-        name, obstacle_names, link_names=link_names
-    )
+    link_names = ['end_effector_ball', 'lwr_arm_7_link', 'lwr_arm_5_link', 'lwr_arm_6_link']
+
+    builder.sphere_collision_avoidance_constraints(name, obstacle_names, link_names=link_names)
 
     solver = optas.CasADiSolver(builder.build()).setup("ipopt")
 
@@ -118,7 +112,7 @@ def main(vis=True):
     solution = solver.solve()
 
     if not vis:
-        return 0
+        return 0        
 
     Q = solution[f"{name}/q"]
 
@@ -139,13 +133,12 @@ def main(vis=True):
             radius=linkrad,
             position_traj=postraj,
             rgb=[1, 0.64705882352, 0.0],
-            alpha_spec={"style": "const", "alpha": 0.25},
+            alpha_spec={'style': 'const', 'alpha': 0.25},
             duration=duration,
             animate=True,
         )
 
     vis.start()
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

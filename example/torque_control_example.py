@@ -123,7 +123,7 @@ def main(gui=True):
     cwd = pathlib.Path(__file__).parent.resolve()
     path = os.path.join(cwd, "robots", "kuka_lbr", "med7.urdf")
     kuka = pybullet_api.FixedBaseRobot(path)
-    # urdf_filename = path
+    #urdf_filename = path
     kuka.reset(qc)
 
     box_base_position = [0.0, 0.0, 0.06]
@@ -134,9 +134,7 @@ def main(gui=True):
     # Move robot to start position
     Tmax_start = 10.0
     transl = kuka.robot.get_global_link_position("lbr_link_ee", q)
-    pginit = optas.np.array(
-        [float(transl[0]), float(transl[1]), float(transl[2]), 0.0, 1.00, 0.0, 0.0]
-    )
+    pginit = optas.np.array([float(transl[0]), float(transl[1]), float(transl[2]), 0.0, 1.00, 0.0, 0.0])
     ik = TrackingController(dt)
 
     box_half_extents = [0.01, 0.01, 0.01]
@@ -165,25 +163,25 @@ def main(gui=True):
         q = kuka.q()
         transl = kuka.robot.get_global_link_position("lbr_link_ee", q)
         pginit1 = pginit + optas.np.array(
-            [
-                0.03 * optas.np.sin(2 * pi * nv * t),
-                0.03 * optas.np.cos(2 * pi * nv * t),
-                0.0002 * pi * t,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-            ]
-        )
-
+                [
+                    0.03 * optas.np.sin(2 * pi * nv * t),
+                    0.03 * optas.np.cos(2 * pi * nv * t),
+                    0.0002 * pi * t,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ]
+            )
+        
         box.reset(base_position=constdist + pginit1[:3], base_orientation=pginit1[3:])
         print("pginit1 = {0}".format(pginit1))
         # dqgoal_last = dqgoal
         dqgoal = ik.compute_target_velocity(q, pginit1)
 
-        qdd = (dqgoal - dqgoal_last) / dt
+        qdd = (dqgoal-dqgoal_last)/dt
 
-        q += dt * dqgoal  # + optas.np.random.uniform(-0.01, 0.01, kuka.ndof)  # noise
+        q += dt * dqgoal  #+ optas.np.random.uniform(-0.01, 0.01, kuka.ndof)  # noise
 
         qd = dqgoal
 
@@ -197,22 +195,16 @@ def main(gui=True):
 
         # q += dt * dqgoal #ideal control
         # taus =optas.np.zeros(7)
-        taus = (
-            ik.kuka.rnea(
-                optas.np.asarray(q), optas.np.asarray(qd), optas.np.asarray(qdd)
-            )
-            .toarray()
-            .flatten()
-            + 1.0 * optas.np.eye(7) @ (dqgoal * dt)
-            - 0.01 * optas.np.eye(7) @ (dqgoal)
-        )
-
+        taus = ik.kuka.rnea(optas.np.asarray(q), 
+                            optas.np.asarray(qd), 
+                            optas.np.asarray(qdd)).toarray().flatten()  +1.0 *optas.np.eye(7)@(dqgoal*dt) - 0.01*optas.np.eye(7)@(dqgoal)
+        
         print("taus = {0}".format(taus))
         kuka.cmd_torque(taus)
         for i in range(1):
             pybullet_api.p.stepSimulation()
-            pybullet_api.time.sleep(dt * float(gui) / 1.0)
-
+            pybullet_api.time.sleep(dt * float(gui)/1.0)
+            
         # q = kuka.q()
         # kuka.reset(q)
 

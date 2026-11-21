@@ -19,16 +19,12 @@ class Planner:
         )
         pm_name = point_mass.get_name()
         max_control = 10.0
-        point_mass_control = optas.TaskModel(
-            "control", pm_dim, time_derivs=[0], dlim={0: [-1, 1]}, is_discrete=True
-        )
+        point_mass_control = optas.TaskModel("control", pm_dim, time_derivs=[0], dlim={0: [-1, 1]}, is_discrete=True)
         pm_control_name = point_mass_control.get_name()
 
         # Setup optimization builder
         T = 15  # number of time steps
-        builder = optas.OptimizationBuilder(
-            T, tasks=[point_mass, point_mass_control], derivs_align=True
-        )
+        builder = optas.OptimizationBuilder(T, tasks=[point_mass, point_mass_control], derivs_align=True)
 
         # Add parameters
         init = builder.add_parameter("init", 2)  # initial point mass position
@@ -42,13 +38,11 @@ class Planner:
         # Constraint: dynamics
         builder.integrate_model_states(pm_name, time_deriv=1, dt=dt)
 
-        for t in range(T - 1):
+        for t in range(T-1):
             prv = builder.get_model_state(pm_name, t, time_deriv=1)
-            nxt = builder.get_model_state(pm_name, t + 1, time_deriv=1)
+            nxt = builder.get_model_state(pm_name, t+1, time_deriv=1)
             ctl = builder.get_model_state(pm_control_name, t, time_deriv=0)
-            builder.add_equality_constraint(
-                f"dynamics_ctl_integrated_{t}", nxt, prv + dt * max_control * ctl
-            )
+            builder.add_equality_constraint(f"dynamics_ctl_integrated_{t}", nxt, prv + dt * max_control * ctl)
 
         # Constraint: initial state
         builder.fix_configuration(pm_name, config=init)
@@ -98,7 +92,7 @@ class Planner:
 
         if not self.solver.did_solve():
             raise RuntimeError("solver failed")
-
+        
         plan_x = self.solver.interpolate(solution[f"{self.pm_name}/y"], self.duration)
         plan_dx = self.solver.interpolate(solution[f"{self.pm_name}/dy"], self.duration)
         return plan_x, plan_dx, solution[f"{self.pm_control_name}/y"].toarray()
@@ -119,11 +113,7 @@ class Animate:
         self.U = self.plan_u
 
         self.fig, self.ax = plt.subplot_mosaic(
-            [
-                ["birdseye", "position"],
-                ["birdseye", "velocity"],
-                ["birdseye", "control"],
-            ],
+            [["birdseye", "position"], ["birdseye", "velocity"], ["birdseye", "control"]],
             layout="constrained",
             figsize=(10, 5),
         )
@@ -173,34 +163,24 @@ class Animate:
         axlim = max([abs(1.5 * l) for l in self.planner.point_mass.dlim[1]])
         self.ax["velocity"].set_ylim(-axlim, axlim)
 
-        self.ax["control"].plot(
-            self.t, self.planner.max_control * self.U[0, :], "-rx", label="U-x"
-        )
-        self.ax["control"].plot(
-            self.t, self.planner.max_control * self.U[1, :], "-bx", label="U-y"
-        )
+        self.ax["control"].plot(self.t, self.planner.max_control*self.U[0, :], "-rx", label="U-x")
+        self.ax["control"].plot(self.t, self.planner.max_control*self.U[1, :], "-bx", label="U-y")
         self.ax["control"].set_ylabel("Control")
         self.ax["control"].set_xlim(0, self.planner.duration)
 
         self.ax["control"].axhline(
-            self.planner.max_control * self.planner.point_mass_control.dlim[0][0],
-            color="red",
-            linestyle="--",
+            self.planner.max_control*self.planner.point_mass_control.dlim[0][0], color="red", linestyle="--"
         )
         self.ax["control"].axhline(
-            self.planner.max_control * self.planner.point_mass_control.dlim[0][1],
+            self.planner.max_control*self.planner.point_mass_control.dlim[0][1],
             color="red",
             linestyle="--",
             label="limit",
-        )
+        )        
 
-        axlim = (
-            1.05
-            * self.planner.max_control
-            * max([abs(l) for l in self.planner.point_mass.dlim[0]])
-        )
+        axlim = 1.05*self.planner.max_control*max([abs(l) for l in self.planner.point_mass.dlim[0]])
         self.ax["control"].set_ylim(-axlim, axlim)
-
+        
         for a in self.ax.values():
             a.legend(ncol=3, loc="lower right")
             a.grid()
